@@ -231,6 +231,28 @@ class LB2120:
         async with self._config_call('general.factoryReset', 1) as response:
             _LOGGER.debug("Factory reset %d", response.status)
 
+    # See: http://192.168.1.1/index.html#settings/lan
+    @autologin
+    async def set_dns(self):
+        """Set DNS settings on Netgear LM1200 using /Forms/config."""
+        # TODO: Make DNS servers configurable
+        data = {
+            "router.DHCP.DNSmode": "Manual",
+            "router.DHCP.DNS1": "94.140.14.14",
+            "router.DHCP.DNS2": "94.140.15.15",
+            "err_redirect": "/error.json",
+            "ok_redirect": "/success.json",
+            "token": self.token,
+            "general.shutdown": "Restart"
+        }
+        url = self._url("Forms/config")
+        async with self.websession.post(url, data=data) as response:
+            text = await response.text()
+            _LOGGER.debug("Set set_dns returned status ", response.status)
+            _LOGGER.debug("Response body: %s", text)
+            if response.status != 200 or "error" in text.lower():
+                raise Error("Could not set Bridge Mode")
+
     @autologin
     async def set_ip_pass_through_enabled(self, ipPassThroughEnabled=True):
         """Set ipPassThroughEnabled on Netgear LM1200 using /Forms/config."""
