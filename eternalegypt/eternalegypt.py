@@ -298,6 +298,24 @@ class LB2120:
             if response.status != 200 or "error" in text.lower():
                 raise Error("Could not set APN")
 
+    @autologin
+    async def set_read_sms_message(self, message_id):
+        """Set message as read on Netgear LM1200 using /Forms/config."""
+        data = {
+            "action": "update",
+            "sms.readId": message_id,
+            "err_redirect": "/error.json",
+            "ok_redirect": "/success.json",
+            "token": self.token
+        }
+        url = self._url("Forms/config")
+        async with self.websession.post(url, data=data) as response:
+            text = await response.text()
+            _LOGGER.debug("Reading message %s, status %d", message_id, response.status)
+            _LOGGER.debug("Response body: %s", text)
+            if response.status != 200 or "error" in text.lower():
+                raise Error("Could not read message")
+
     def _build_information(self, data):
         """Read the bits we need from returned data."""
         result = Information()
