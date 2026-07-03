@@ -176,6 +176,12 @@ class LB2120:
             _LOGGER.debug("Disconnected LTE with status %d", response.status)
 
     @autologin
+    async def turn_off_wifi_when_tethering(self):
+        """Turn off WiFi when tethering."""
+        async with self._config_call('power.wifiOff.onUsbConnect', 'true') as response:
+            _LOGGER.debug("Turned off WiFi when tethering with status %d", response.status)
+
+    @autologin
     async def connect_lte(self):
         """Do an LTE reconnect."""
         async with self._config_call('wwan.connect', 'DefaultProfile') as response:
@@ -231,6 +237,26 @@ class LB2120:
         async with self._config_call('general.factoryReset', 1) as response:
             _LOGGER.debug("Factory reset %d", response.status)
 
+    @autologin
+    async def set_network_settings(self):
+        """Set gateway IP, DHCP low and high IP ranges."""
+        data = {
+            "router.gatewayIP": "192.168.86.1",
+            "router.DHCP.range.low": "192.168.86.20",
+            "router.DHCP.range.high": "192.168.86.99",
+            "err_redirect": "/error.json",
+            "ok_redirect": "/success.json",
+            "token": self.token,
+            "general.shutdown": "Restart"
+        }
+        url = self._url("Forms/config")
+        async with self.websession.post(url, data=data) as response:
+            text = await response.text()
+            _LOGGER.debug("Set set_network_settings returned status: %s", response.status)
+            _LOGGER.debug("Response body: %s", text)
+            if response.status != 200 or "error" in text.lower():
+                raise Error("Could not change network settings")
+
     # See: http://192.168.1.1/index.html#settings/lan
     @autologin
     async def set_dns(self):
@@ -248,10 +274,10 @@ class LB2120:
         url = self._url("Forms/config")
         async with self.websession.post(url, data=data) as response:
             text = await response.text()
-            _LOGGER.debug("Set set_dns returned status ", response.status)
+            _LOGGER.debug("Set set_dns returned status: %s", response.status)
             _LOGGER.debug("Response body: %s", text)
             if response.status != 200 or "error" in text.lower():
-                raise Error("Could not set Bridge Mode")
+                raise Error("Could not set DNS servers")
 
     @autologin
     async def set_ip_pass_through_enabled(self, ipPassThroughEnabled=True):
