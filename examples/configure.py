@@ -22,6 +22,7 @@ async def reconnect():
 
     # Doesn't require reboot
     await modem.turn_off_wifi_when_tethering()
+    await modem.set_led_enabled(False)
 
     # await modem.login(password=sys.argv[2])
 

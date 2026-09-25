@@ -182,6 +182,17 @@ class LB2120:
             _LOGGER.debug("Turned off WiFi when tethering with status %d", response.status)
 
     @autologin
+    async def set_led_enabled(self, enabled=True):
+        """Enable or disable LED blinking."""
+        value = "true" if enabled else "false"
+        async with self._config_call('general.LEDenabled', value) as response:
+            text = await response.text()
+            _LOGGER.debug("Set LEDenabled %s returned status %d", value, response.status)
+            _LOGGER.debug("Response body: %s", text)
+            if response.status != 200 or "error" in text.lower():
+                raise Error("Could not set LED blinking")
+
+    @autologin
     async def connect_lte(self):
         """Do an LTE reconnect."""
         async with self._config_call('wwan.connect', 'DefaultProfile') as response:
