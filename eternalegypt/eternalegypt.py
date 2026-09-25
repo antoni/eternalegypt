@@ -141,6 +141,39 @@ class LB2120:
         except (asyncio.TimeoutError, ClientError, Error) as ex:
             raise Error(f"Could not login ({ex})")
 
+    async def _is_ready(self):
+        """Return True if the modem web interface answers with a session token."""
+        try:
+            async with asyncio.timeout(TIMEOUT):
+                async with self.websession.get(self._url('model.json')) as response:
+                    if response.status != 200:
+                        return False
+                    data = json.loads(await response.text())
+                    return data.get('session', {}).get('secToken') is not None
+        except (asyncio.TimeoutError, ClientError, OSError, ValueError):
+            return False
+
+    async def wait_for_reboot(self, down_timeout=60, up_timeout=300, interval=2):
+        """Wait for the modem to go down and come back up, then log in again."""
+        loop = asyncio.get_running_loop()
+
+        _LOGGER.debug("Waiting for modem to go down")
+        deadline = loop.time() + down_timeout
+        while await self._is_ready():
+            if loop.time() > deadline:
+                raise Error("Modem did not go down for reboot")
+            await asyncio.sleep(interval)
+
+        _LOGGER.debug("Waiting for modem to come back up")
+        deadline = loop.time() + up_timeout
+        while not await self._is_ready():
+            if loop.time() > deadline:
+                raise Error("Modem did not come back after reboot")
+            await asyncio.sleep(interval)
+
+        _LOGGER.debug("Modem is back, logging in")
+        await self.login()
+
     @autologin
     async def sms(self, phone, message):
         """Send a message."""
@@ -270,13 +303,15 @@ class LB2120:
 
     # See: http://192.168.1.1/index.html#settings/lan
     @autologin
-    async def set_dns(self):
-        """Set DNS settings on Netgear LM1200 using /Forms/config."""
-        # TODO: Make DNS servers configurable
+    async def set_dns(self, dns1, dns2):
+        """Set DNS settings on Netgear LM1200 using /Forms/config.
+
+        The modem restarts afterwards, see wait_for_reboot().
+        """
         data = {
             "router.DHCP.DNSmode": "Manual",
-            "router.DHCP.DNS1": "94.140.14.14",
-            "router.DHCP.DNS2": "94.140.15.15",
+            "router.DHCP.DNS1": dns1,
+            "router.DHCP.DNS2": dns2,
             "err_redirect": "/error.json",
             "ok_redirect": "/success.json",
             "token": self.token,

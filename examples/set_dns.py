@@ -21,7 +21,7 @@ async def get_information():
     modem = eternalegypt.Modem(hostname=sys.argv[1], websession=websession)
     await modem.login(password=sys.argv[2])
 
-    result = await modem.set_dns()
+    result = await modem.set_dns("94.140.14.14", "94.140.15.15")
     print(json.dumps(result, default=lambda o: o.__dict__))
     print("Device will be restarted now")
 

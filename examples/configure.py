@@ -25,8 +25,11 @@ async def configure():
     await modem.turn_off_wifi_when_tethering()
     await modem.set_led_enabled(False)
 
-    # await modem.login(password=sys.argv[2])
+    # AdGuard DNS, requires reboot
+    await modem.set_dns("94.140.14.14", "94.140.15.15")
+    await modem.wait_for_reboot()
 
+    # Requires reboot and may change the gateway IP, so keep it last
     await modem.set_network_settings()
 
     print("Closing down")
