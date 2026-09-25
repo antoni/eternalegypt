@@ -35,7 +35,7 @@ async def configure():
     await modem.wait_for_reboot()
 
     # Requires reboot and may change the gateway IP, so keep it last
-    await modem.set_network_settings()
+    await modem.set_network_settings("192.168.86.1", "192.168.86.20", "192.168.86.99")
 
     print("Closing down")
     await modem.logout()

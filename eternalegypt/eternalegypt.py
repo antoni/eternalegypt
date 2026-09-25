@@ -282,12 +282,15 @@ class LB2120:
             _LOGGER.debug("Factory reset %d", response.status)
 
     @autologin
-    async def set_network_settings(self):
-        """Set gateway IP, DHCP low and high IP ranges."""
+    async def set_network_settings(self, gateway_ip, dhcp_range_low, dhcp_range_high):
+        """Set gateway IP, DHCP low and high IP ranges.
+
+        The modem restarts afterwards and is reachable at gateway_ip.
+        """
         data = {
-            "router.gatewayIP": "192.168.86.1",
-            "router.DHCP.range.low": "192.168.86.20",
-            "router.DHCP.range.high": "192.168.86.99",
+            "router.gatewayIP": gateway_ip,
+            "router.DHCP.range.low": dhcp_range_low,
+            "router.DHCP.range.high": dhcp_range_high,
             "err_redirect": "/error.json",
             "ok_redirect": "/success.json",
             "token": self.token,
