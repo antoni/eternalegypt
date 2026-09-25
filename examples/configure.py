@@ -25,6 +25,11 @@ async def configure():
     await modem.turn_off_wifi_when_tethering()
     await modem.set_led_enabled(False)
 
+    # Mark all messages as read
+    result = await modem.information()
+    for sms in result.sms:
+        await modem.set_read_sms_message(sms.id)
+
     # AdGuard DNS, requires reboot
     await modem.set_dns("94.140.14.14", "94.140.15.15")
     await modem.wait_for_reboot()
