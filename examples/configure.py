@@ -9,10 +9,11 @@ import aiohttp
 import eternalegypt
 
 import logging
+
 logging.basicConfig(level=logging.DEBUG)
 
 
-async def reconnect():
+async def configure():
     """Example of configuring fresh router"""
     jar = aiohttp.CookieJar(unsafe=True)
     websession = aiohttp.ClientSession(cookie_jar=jar)
@@ -33,7 +34,8 @@ async def reconnect():
 
     await websession.close()
 
+
 if len(sys.argv) != 3:
     print("{}: <netgear ip> <netgear password>".format(sys.argv[0]))
 else:
-    asyncio.run(reconnect())
+    asyncio.run(configure())
